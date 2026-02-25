@@ -1,7 +1,26 @@
 [project]
 name = "dprr-tool"
 version = "0.1.0"
-description = "Add your description here"
+description = "Natural language SPARQL queries for the Digital Prosopography of the Roman Republic"
 readme = "README.md"
 requires-python = ">=3.13"
-dependencies = []
+dependencies = [
+    "anthropic",
+    "pyoxigraph",
+    "rdflib",
+    "click",
+    "rich",
+    "pyyaml",
+]
+
+[project.scripts]
+dprr-tool = "dprr_tool.cli:cli"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[dependency-groups]
+dev = [
+    "pytest",
+]
