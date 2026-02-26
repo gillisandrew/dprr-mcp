@@ -126,6 +126,86 @@ The CLI `ask` command uses the Anthropic API directly for a standalone experienc
 | `DPRR_STORE_PATH` | Override default store location (`~/.dprr-tool`) |
 | `DPRR_RDF_FILE` | Path to DPRR Turtle file for auto-initialization (MCP mode) |
 
+## References
+
+This tool queries data from the [Digital Prosopography of the Roman Republic](http://romanrepublic.ac.uk/) (DPRR), which draws on the following secondary sources:
+
+```bibtex
+@misc{dprr,
+  author       = {Mouritsen, Henrik and Mayfield, Jamie and Bradley, John},
+  title        = {Digital Prosopography of the Roman Republic ({DPRR})},
+  year         = {2017},
+  publisher    = {King's Digital Lab, King's College London},
+  url          = {https://romanrepublic.ac.uk/},
+  note         = {AHRC grant AH/K007211/1}
+}
+
+@book{broughton1951,
+  author    = {Broughton, T. Robert S.},
+  title     = {The Magistrates of the Roman Republic},
+  volume    = {1: 509 B.C.--100 B.C.},
+  series    = {Philological Monographs},
+  number    = {15},
+  publisher = {American Philological Association},
+  address   = {New York},
+  year      = {1951}
+}
+
+@book{broughton1952,
+  author    = {Broughton, T. Robert S.},
+  title     = {The Magistrates of the Roman Republic},
+  volume    = {2: 99 B.C.--31 B.C.},
+  series    = {Philological Monographs},
+  number    = {15},
+  publisher = {American Philological Association},
+  address   = {New York},
+  year      = {1952}
+}
+
+@book{broughton1986,
+  author    = {Broughton, T. Robert S.},
+  title     = {The Magistrates of the Roman Republic},
+  volume    = {3: Supplement},
+  series    = {Philological Monographs},
+  number    = {15},
+  publisher = {Scholars Press},
+  address   = {Atlanta, GA},
+  year      = {1986}
+}
+
+@book{rupke2008,
+  author    = {R{\"u}pke, J{\"o}rg},
+  title     = {Fasti Sacerdotum: A Prosopography of Pagan, Jewish, and Christian Religious Officials in the City of Rome, 300 {BC} to {AD} 499},
+  translator = {Richardson, David M. B.},
+  publisher = {Oxford University Press},
+  address   = {Oxford},
+  year      = {2008},
+  isbn      = {978-0-19-929113-7}
+}
+
+@book{zmeskal2009,
+  author    = {Zmeskal, Klaus},
+  title     = {Adfinitas: Die Verwandtschaften der senatorischen F{\"u}hrungsschicht der r{\"o}mischen Republik von 218--31 v.~Chr.},
+  publisher = {Verlag Karl Stutz},
+  address   = {Passau},
+  year      = {2009},
+  isbn      = {978-3-88849-304-1}
+}
+```
+
+### Citing this tool
+
+If you use dprr-tool in your research, please cite:
+
+```bibtex
+@software{dprr_tool,
+  author    = {Gillis, Andrew},
+  title     = {dprr-tool: Natural Language {SPARQL} Queries for the Digital Prosopography of the Roman Republic},
+  year      = {2025},
+  url       = {https://github.com/gillisandrew/dprr-tool}
+}
+```
+
 ## Development
 
 ```bash
