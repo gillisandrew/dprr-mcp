@@ -1,8 +1,10 @@
-"""MCP server exposing DPRR SPARQL tools over stdio."""
+"""MCP server exposing DPRR SPARQL tools over stdio or streamable-http."""
 
 from __future__ import annotations
 
+import asyncio
 import json
+import logging
 import os
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
@@ -25,6 +27,10 @@ from dprr_tool.validate import (
     parse_and_fix_prefixes,
     validate_and_execute,
 )
+
+logger = logging.getLogger(__name__)
+
+QUERY_TIMEOUT = int(os.environ.get("DPRR_QUERY_TIMEOUT", "30"))
 
 DEFAULT_STORE_PATH = Path.home() / ".dprr-tool" / "store"
 
@@ -101,11 +107,51 @@ def validate_sparql(ctx: Context, sparql: str) -> str:
 
 
 @mcp.tool()
-def execute_sparql(ctx: Context, sparql: str) -> str:
+async def execute_sparql(ctx: Context, sparql: str) -> str:
     """Validate and execute a SPARQL query against the local DPRR RDF store. Returns results as rows of column/value pairs. Automatically repairs missing PREFIX declarations before execution."""
     app: AppContext = ctx.request_context.lifespan_context
 
-    result = validate_and_execute(sparql, app.store, app.schema_dict, app.prefix_map)
+    try:
+        result = await asyncio.wait_for(
+            asyncio.to_thread(
+                validate_and_execute, sparql, app.store, app.schema_dict, app.prefix_map
+            ),
+            timeout=QUERY_TIMEOUT,
+        )
+    except asyncio.TimeoutError:
+        logger.warning("Query timed out after %ds: %s", QUERY_TIMEOUT, sparql[:200])
+        return json.dumps(
+            {
+                "success": False,
+                "sparql": sparql,
+                "rows": [],
+                "row_count": 0,
+                "errors": [f"Query timed out after {QUERY_TIMEOUT}s. Simplify the query or increase DPRR_QUERY_TIMEOUT."],
+            }
+        )
+    except OSError as e:
+        logger.error("Store error: %s", e)
+        return json.dumps(
+            {
+                "success": False,
+                "sparql": sparql,
+                "rows": [],
+                "row_count": 0,
+                "errors": [f"Store access error: {e}"],
+            }
+        )
+    except Exception as e:
+        logger.error("Unexpected error executing query: %s", e)
+        return json.dumps(
+            {
+                "success": False,
+                "sparql": sparql,
+                "rows": [],
+                "row_count": 0,
+                "errors": [f"Unexpected error: {e}"],
+            }
+        )
+
     return json.dumps(
         {
             "success": result.success,
@@ -118,8 +164,26 @@ def execute_sparql(ctx: Context, sparql: str) -> str:
 
 
 def main():
-    """Run the MCP server on stdio."""
-    mcp.run(transport="stdio")
+    """Run the MCP server."""
+    import argparse
+
+    parser = argparse.ArgumentParser(description="DPRR MCP Server")
+    parser.add_argument(
+        "--transport",
+        choices=["stdio", "http"],
+        default="stdio",
+        help="Transport protocol (default: stdio)",
+    )
+    parser.add_argument("--host", default="127.0.0.1", help="Host for HTTP transport (default: 127.0.0.1)")
+    parser.add_argument("--port", type=int, default=8000, help="Port for HTTP transport (default: 8000)")
+    args = parser.parse_args()
+
+    if args.transport == "http":
+        mcp.settings.host = args.host
+        mcp.settings.port = args.port
+        mcp.run(transport="streamable-http")
+    else:
+        mcp.run(transport="stdio")
 
 
 if __name__ == "__main__":

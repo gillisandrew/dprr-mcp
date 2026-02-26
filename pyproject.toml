@@ -16,6 +16,7 @@ dependencies = [
 
 [project.scripts]
 dprr-tool = "dprr_tool.cli:cli"
+dprr-server = "dprr_tool.mcp_server:main"
 
 [build-system]
 requires = ["hatchling"]
@@ -24,4 +25,5 @@ build-backend = "hatchling.build"
 [dependency-groups]
 dev = [
     "pytest",
+    "pytest-asyncio",
 ]
