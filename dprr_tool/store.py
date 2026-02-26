@@ -44,3 +44,30 @@ def is_initialized(store_path: Path) -> bool:
         return len(store) > 0
     except OSError:
         return False
+
+
+def ensure_initialized(store_path: Path, rdf_file: str | None = None) -> Store:
+    """Open the store, auto-loading RDF data from rdf_file if the store is empty.
+
+    If rdf_file is None, reads from the DPRR_RDF_FILE environment variable.
+    Raises RuntimeError if the store is empty and no RDF file is available.
+    """
+    import os
+
+    store = get_or_create_store(store_path)
+    if len(store) > 0:
+        return store
+
+    rdf_path = rdf_file or os.environ.get("DPRR_RDF_FILE")
+    if not rdf_path:
+        raise RuntimeError(
+            "Store is empty and no RDF file provided. "
+            "Set DPRR_RDF_FILE environment variable or run 'dprr-tool init <rdf-file>'."
+        )
+
+    path = Path(rdf_path)
+    if not path.exists():
+        raise RuntimeError(f"RDF file not found: {path}")
+
+    load_rdf(store, path)
+    return store

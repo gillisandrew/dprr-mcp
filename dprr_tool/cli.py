@@ -97,6 +97,20 @@ def ask(ctx, question: str):
         console.print(Markdown(result.synthesis))
 
 
+@cli.command()
+@click.pass_context
+def serve(ctx):
+    """Start the MCP server on stdio for use with Claude Code, Claude Desktop, etc."""
+    import os
+
+    store_path = ctx.obj["store_path"]
+    os.environ.setdefault("DPRR_STORE_PATH", str(store_path / "store"))
+
+    from dprr_tool.mcp_server import main as mcp_main
+
+    mcp_main()
+
+
 def _print_results_table(rows: list[dict]):
     if not rows:
         console.print("[yellow]No results.[/yellow]")
