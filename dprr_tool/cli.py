@@ -6,7 +6,7 @@ from rich.markdown import Markdown
 from rich.syntax import Syntax
 from rich.table import Table
 
-from dprr_tool.store import get_or_create_store, is_initialized, load_rdf, execute_query
+from dprr_tool.store import get_or_create_store, get_read_only_store, is_initialized, load_rdf, execute_query
 
 DEFAULT_STORE_PATH = Path.home() / ".dprr-tool"
 console = Console()
@@ -42,8 +42,7 @@ def info(ctx):
         console.print("[yellow]Store is not initialized. No data loaded.[/yellow]")
         console.print("Run [bold]dprr-tool init <rdf-file>[/bold] to load DPRR data.")
         return
-    from pyoxigraph import Store as OxStore
-    store = OxStore(str(store_path))
+    store = get_read_only_store(store_path)
     console.print(f"Store path: [bold]{store_path}[/bold]")
     console.print(f"Triple count: [bold]{len(store)}[/bold]")
 
@@ -57,7 +56,7 @@ def query(ctx, sparql_query: str):
     if not is_initialized(store_path):
         console.print("[red]Store is not initialized. Run 'dprr-tool init' first.[/red]")
         raise SystemExit(1)
-    store = get_or_create_store(store_path)
+    store = get_read_only_store(store_path)
     console.print(Syntax(sparql_query, "sparql", theme="monokai"))
     try:
         rows = execute_query(store, sparql_query)
@@ -78,7 +77,7 @@ def ask(ctx, question: str):
         raise SystemExit(1)
     from anthropic import Anthropic
     from dprr_tool.pipeline import run_pipeline
-    store = get_or_create_store(store_path)
+    store = get_read_only_store(store_path)
     client = Anthropic()
     console.print(f"\n[bold]Question:[/bold] {question}\n")
     with console.status("Thinking..."):

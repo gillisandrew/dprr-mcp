@@ -46,17 +46,22 @@ def is_initialized(store_path: Path) -> bool:
         return False
 
 
+def get_read_only_store(path: Path) -> Store:
+    """Open an existing Oxigraph store in read-only mode (no file locking)."""
+    return Store.read_only(str(path))
+
+
 def ensure_initialized(store_path: Path, rdf_file: str | None = None) -> Store:
     """Open the store, auto-loading RDF data from rdf_file if the store is empty.
 
+    Returns a read-only store when data already exists to avoid file locking.
     If rdf_file is None, reads from the DPRR_RDF_FILE environment variable.
     Raises RuntimeError if the store is empty and no RDF file is available.
     """
     import os
 
-    store = get_or_create_store(store_path)
-    if len(store) > 0:
-        return store
+    if is_initialized(store_path):
+        return get_read_only_store(store_path)
 
     rdf_path = rdf_file or os.environ.get("DPRR_RDF_FILE")
     if not rdf_path:
@@ -69,5 +74,7 @@ def ensure_initialized(store_path: Path, rdf_file: str | None = None) -> Store:
     if not path.exists():
         raise RuntimeError(f"RDF file not found: {path}")
 
+    store = get_or_create_store(store_path)
     load_rdf(store, path)
-    return store
+    del store
+    return get_read_only_store(store_path)
