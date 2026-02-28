@@ -29,7 +29,7 @@ from dprr_tool.validate import (
 
 logger = logging.getLogger(__name__)
 
-QUERY_TIMEOUT = int(os.environ.get("DPRR_QUERY_TIMEOUT", "120"))
+QUERY_TIMEOUT = int(os.environ.get("DPRR_QUERY_TIMEOUT", "600"))
 
 DEFAULT_STORE_PATH = Path.home() / ".dprr-tool" / "store"
 
