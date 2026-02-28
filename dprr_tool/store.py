@@ -3,6 +3,8 @@ from pathlib import Path
 
 from pyoxigraph import RdfFormat, Store
 
+from dprr_tool.fetch import fetch_data
+
 
 def get_data_dir() -> Path:
     """Compute the DPRR data directory.
@@ -77,8 +79,8 @@ def get_read_only_store(path: Path) -> Store:
 def ensure_initialized() -> Store:
     """Open the store, auto-loading dprr.ttl from data_dir if the store is empty.
 
+    If dprr.ttl is not present, attempts to fetch it from the configured URL.
     Returns a read-only store. Derives paths from get_data_dir().
-    Raises RuntimeError if the store is empty and dprr.ttl is not found.
     """
     data_dir = get_data_dir()
     store_path = data_dir / "store"
@@ -88,10 +90,8 @@ def ensure_initialized() -> Store:
         return get_read_only_store(store_path)
 
     if not rdf_path.exists():
-        raise RuntimeError(
-            f"Store is empty and no data file found at {rdf_path}. "
-            "Run the server where data can be fetched, or place dprr.ttl manually."
-        )
+        data_dir.mkdir(parents=True, exist_ok=True)
+        fetch_data(data_dir)
 
     store = get_or_create_store(store_path)
     load_rdf(store, rdf_path)

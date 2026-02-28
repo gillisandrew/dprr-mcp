@@ -181,11 +181,30 @@ def test_ensure_initialized_uses_data_dir(tmp_path):
         assert int(results[0]["c"]) > 0
 
 
-def test_ensure_initialized_no_rdf_file_raises(tmp_path):
-    """ensure_initialized raises RuntimeError when no dprr.ttl exists."""
+def test_ensure_initialized_fetches_when_no_ttl(tmp_path):
+    """ensure_initialized calls fetch_data when dprr.ttl is missing."""
+    data_dir = tmp_path / "data"
+    data_dir.mkdir()
+    # No dprr.ttl exists — fetch_data should be called
+
+    def fake_fetch(data_dir, **kwargs):
+        (data_dir / "dprr.ttl").write_text(SAMPLE_TURTLE)
+        return data_dir / "dprr.ttl"
+
+    with patch.dict(os.environ, {"DPRR_DATA_DIR": str(data_dir)}, clear=True):
+        with patch("dprr_tool.store.fetch_data", side_effect=fake_fetch) as mock_fetch:
+            store = ensure_initialized()
+            mock_fetch.assert_called_once_with(data_dir)
+            results = execute_query(store, "SELECT (COUNT(*) AS ?c) WHERE { ?s ?p ?o }")
+            assert int(results[0]["c"]) > 0
+
+
+def test_ensure_initialized_fetch_failure_raises(tmp_path):
+    """ensure_initialized raises RuntimeError when fetch fails."""
     data_dir = tmp_path / "empty"
     data_dir.mkdir()
 
     with patch.dict(os.environ, {"DPRR_DATA_DIR": str(data_dir)}, clear=True):
-        with pytest.raises(RuntimeError, match="dprr.ttl"):
-            ensure_initialized()
+        with patch("dprr_tool.store.fetch_data", side_effect=RuntimeError("download failed")):
+            with pytest.raises(RuntimeError, match="download failed"):
+                ensure_initialized()
