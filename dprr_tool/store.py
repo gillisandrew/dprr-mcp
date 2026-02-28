@@ -76,7 +76,7 @@ def ensure_initialized(store_path: Path, rdf_file: str | None = None) -> Store:
     if not rdf_path:
         raise RuntimeError(
             "Store is empty and no RDF file provided. "
-            "Set DPRR_RDF_FILE environment variable or run 'dprr-tool init <rdf-file>'."
+            "Set DPRR_RDF_FILE environment variable."
         )
 
     path = Path(rdf_path)

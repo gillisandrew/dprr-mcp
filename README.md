@@ -12,28 +12,15 @@ uv sync
 
 ### Load DPRR data
 
-Download the DPRR RDF dataset (Turtle format), then initialize the local Oxigraph store:
+Download the DPRR RDF dataset (Turtle format), then set the `DPRR_RDF_FILE` environment variable:
 
 ```bash
-dprr-tool init /path/to/dprr-data.ttl
+export DPRR_RDF_FILE=/path/to/dprr-data.ttl
 ```
 
-Running `init` again will detect existing data and skip loading. Use `--force` to reinitialize.
+The local Oxigraph store loads automatically on first use.
 
 ## Usage
-
-### CLI
-
-```bash
-# Execute a raw SPARQL query
-dprr-tool query "SELECT ?p WHERE { ?p a vocab:Person } LIMIT 10"
-
-# Show store statistics
-dprr-tool info
-
-# Set logging level
-dprr-tool --log-level DEBUG info
-```
 
 ### MCP Server
 
@@ -45,7 +32,7 @@ dprr-server
 dprr-server --host 0.0.0.0 --port 9000
 ```
 
-The server listens on `http://127.0.0.1:8000/mcp` by default. A health check endpoint is available at `/healthz`. Queries that exceed the timeout (default 120s, configurable via `DPRR_QUERY_TIMEOUT`) return a structured error instead of crashing the connection.
+The server listens on `http://127.0.0.1:8000/mcp` by default. A health check endpoint is available at `/healthz`. Queries that exceed the timeout (default 600s, configurable via `DPRR_QUERY_TIMEOUT`) return a structured error instead of crashing the connection.
 
 #### MCP Tools
 
@@ -92,7 +79,7 @@ Alternatively, Claude Code can launch the server process automatically:
 }
 ```
 
-Setting `DPRR_RDF_FILE` enables auto-initialization — the store loads the data on first use without needing `dprr-tool init`.
+Setting `DPRR_RDF_FILE` enables auto-initialization — the store loads the data on first use.
 
 #### Claude Desktop configuration
 
@@ -149,7 +136,7 @@ The MCP server + skill path lets Claude orchestrate the pipeline with no additio
 |----------|-------------|
 | `DPRR_STORE_PATH` | Override default store location (`~/.dprr-tool`) |
 | `DPRR_RDF_FILE` | Path to DPRR Turtle file for auto-initialization (MCP mode) |
-| `DPRR_QUERY_TIMEOUT` | Query timeout in seconds (default: 120) |
+| `DPRR_QUERY_TIMEOUT` | Query timeout in seconds (default: 600) |
 
 ## References
 
