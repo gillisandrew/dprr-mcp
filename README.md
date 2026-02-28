@@ -1,6 +1,6 @@
 # dprr-mcp
 
-Natural language SPARQL queries for the [Digital Prosopography of the Roman Republic](http://romanrepublic.ac.uk/) (DPRR). Ask questions about ~4,800 Roman individuals (509–31 BC) — their offices, family relationships, social statuses, and life dates — and get validated SPARQL queries and academic prose summaries.
+Natural-language prosopographic queries for the Roman Republic. Generates validated SPARQL against the [DPRR](http://romanrepublic.ac.uk/) RDF dataset and synthesises results with uncertainty flags and source citations.
 
 ## Before You Begin
 
