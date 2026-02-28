@@ -2,6 +2,10 @@
 
 Natural language SPARQL queries for the [Digital Prosopography of the Roman Republic](http://romanrepublic.ac.uk/) (DPRR). Ask questions about ~4,800 Roman individuals (509–31 BC) — their offices, family relationships, social statuses, and life dates — and get validated SPARQL queries and academic prose summaries.
 
+## Before You Begin
+
+**Strongly recommended reading:** [Caveat Utilitor](./CAVEAT_UTILITOR.md) — a detailed guide to the risks, biases, and inferential fallacies inherent in the DPRR dataset. The database documents a narrow, elite slice of Roman Republican society filtered through multiple layers of modern scholarly interpretation. Absence of evidence is not evidence of absence, naming conventions are ambiguous, and coverage varies dramatically by period. Read this document before drawing conclusions from query results.
+
 ## Setup
 
 Requires Python 3.13+ and [uv](https://docs.astral.sh/uv/).
