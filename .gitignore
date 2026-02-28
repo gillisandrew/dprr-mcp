@@ -20,3 +20,6 @@ wheels/
 
 # Generated reports
 reports/
+
+# Git worktrees
+.worktrees/
