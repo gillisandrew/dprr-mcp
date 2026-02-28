@@ -139,3 +139,28 @@ def test_tips_yaml_loads():
         assert "id" in tip, f"Tip {i} missing id"
         assert "title" in tip, f"Tip {i} missing title"
         assert "body" in tip, f"Tip {i} missing body"
+
+
+def test_tips_yaml_has_classes():
+    """Every tip must have a 'classes' list."""
+    with open(CONTEXT_DIR / "tips.yaml") as f:
+        data = yaml.safe_load(f)
+    for tip in data["tips"]:
+        assert "classes" in tip, f"Tip '{tip['id']}' missing 'classes' field"
+        assert isinstance(tip["classes"], list), (
+            f"Tip '{tip['id']}' classes must be a list"
+        )
+
+
+def test_tip_classes_are_valid():
+    """All class names referenced in tips must exist in schemas.yaml."""
+    with open(CONTEXT_DIR / "schemas.yaml") as f:
+        schemas = yaml.safe_load(f)["classes"]
+    with open(CONTEXT_DIR / "tips.yaml") as f:
+        tips = yaml.safe_load(f)["tips"]
+    valid_classes = set(schemas.keys())
+    for tip in tips:
+        for cls in tip.get("classes", []):
+            assert cls in valid_classes, (
+                f"Tip '{tip['id']}' references unknown class '{cls}'"
+            )
