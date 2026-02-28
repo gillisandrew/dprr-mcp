@@ -113,6 +113,23 @@ With the MCP server configured, use the built-in skill:
 
 Claude will load the DPRR schema, generate a SPARQL query, validate and execute it, then synthesize the results into an academic summary with source citations and uncertainty flags.
 
+#### Example output
+
+> **Praetors of 150 BC**
+>
+> | Name | Office | Uncertain? |
+> |------|--------|------------|
+> | C. Livius (14) M. f. M. n. Drusus | Praetor | No |
+> | P. Sextilius (not in RE) | Praetor | No |
+>
+> The DPRR records **two praetors** for 150 BC:
+>
+> **C. Livius Drusus** (RE no. 14) is the better-attested of the pair. A member of the plebeian *gens Livia*, he is identified as the son and grandson of Marcus — the filiation M. f. M. n. places him firmly within the Drusi branch of the family. Broughton's *Magistrates of the Roman Republic* (MRR) lists him among the praetors for this year.
+>
+> **P. Sextilius** is more obscure — the DPRR note "(not in RE)" indicates he lacks an entry in Pauly-Wissowa's *Realencyclopädie*, suggesting limited prosopographic evidence for this individual.
+>
+> Neither assertion is flagged as uncertain. Note that the Roman Republic typically elected **six praetors** per year by this period (after the increase from four in 227 BC), so the DPRR's two entries likely reflect incomplete survival of the historical record rather than the full college for 150 BC. Broughton's MRR remains the standard reference for supplementing these gaps.
+
 ## Architecture
 
 ```
