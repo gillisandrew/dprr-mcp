@@ -69,7 +69,7 @@ The server listens on `http://127.0.0.1:8000/mcp` by default. A health check end
 
 | Tool | Description |
 |------|-------------|
-| `get_schema` | Returns DPRR ontology prefixes, schema, 30 curated example query pairs, and query tips |
+| `get_schema` | Returns DPRR ontology prefixes, available classes, and general query tips |
 | `validate_sparql` | Syntax check, auto-repairs missing PREFIX declarations, semantic validation against the ontology |
 | `execute_sparql` | Full validation + execution against the local Oxigraph RDF store |
 
