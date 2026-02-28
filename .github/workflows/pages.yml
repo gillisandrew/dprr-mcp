@@ -1,9 +1,9 @@
-name: Deploy examples to GitHub Pages
+name: Deploy site to GitHub Pages
 
 on:
   push:
     branches: [main]
-    paths: [examples/**]
+    paths: [site/**]
   workflow_dispatch:
 
 permissions:
@@ -25,6 +25,6 @@ jobs:
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: examples
+          path: site
       - id: deployment
         uses: actions/deploy-pages@v4
