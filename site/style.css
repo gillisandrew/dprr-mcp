@@ -117,6 +117,23 @@ pre code {
   color: inherit;
   font-size: inherit;
 }
+
+/* Prism syntax highlighting — warm palette */
+pre .token.comment,
+pre .token.prolog { color: #8a8072; font-style: italic; }
+pre .token.property,
+pre .token.tag,
+pre .token.key { color: #d4a373; }
+pre .token.string,
+pre .token.attr-value { color: #a8c686; }
+pre .token.number,
+pre .token.boolean { color: #d4886b; }
+pre .token.punctuation { color: #b0a898; }
+pre .token.operator { color: #c4593a; }
+pre .token.keyword,
+pre .token.builtin { color: #c4593a; }
+pre .token.function { color: #dbc5a0; }
+pre .token.variable { color: #e8e0d6; }
 pre.architecture {
   background: #fff;
   color: #555;

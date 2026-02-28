@@ -41,17 +41,17 @@
 
     <h3>From source</h3>
     <p>Requires Python 3.13+ and <a href="https://docs.astral.sh/uv/">uv</a>.</p>
-    <pre><code>uv sync
+    <pre><code class="language-bash">uv sync
 uv run dprr-server</code></pre>
 
     <h3>Docker</h3>
     <p>Prebuilt images are published to GHCR on every release:</p>
-    <pre><code>docker run -p 8000:8000 ghcr.io/gillisandrew/dprr-mcp:latest</code></pre>
+    <pre><code class="language-bash">docker run -p 8000:8000 ghcr.io/gillisandrew/dprr-mcp:latest</code></pre>
     <p>Or build locally:</p>
-    <pre><code>docker build -t dprr-mcp .
+    <pre><code class="language-bash">docker build -t dprr-mcp .
 docker run -p 8000:8000 dprr-mcp</code></pre>
     <p>To persist data across container restarts, mount a volume:</p>
-    <pre><code>docker run -p 8000:8000 \
+    <pre><code class="language-bash">docker run -p 8000:8000 \
   -v dprr-data:/root/.local/share/dprr-mcp \
   ghcr.io/gillisandrew/dprr-mcp:latest</code></pre>
 
@@ -81,7 +81,7 @@ docker run -p 8000:8000 dprr-mcp</code></pre>
       The server uses the <code>streamable-http</code> transport — it runs as a standalone HTTP process
       that MCP clients connect to over the network.
     </p>
-    <pre><code># From source
+    <pre><code class="language-bash"># From source
 uv run dprr-server
 
 # Custom host/port
@@ -102,7 +102,7 @@ docker run -p 8000:8000 ghcr.io/gillisandrew/dprr-mcp:latest</code></pre>
       <tbody>
         <tr>
           <td><code>get_schema</code></td>
-          <td>Returns DPRR ontology prefixes, schema, 30 curated example query pairs, and query tips</td>
+          <td>Returns DPRR ontology prefixes, available classes, and general query tips</td>
         </tr>
         <tr>
           <td><code>validate_sparql</code></td>
@@ -117,7 +117,7 @@ docker run -p 8000:8000 ghcr.io/gillisandrew/dprr-mcp:latest</code></pre>
 
     <h3>Claude Code configuration</h3>
     <p>Start the server, then add to <code>.claude/settings.json</code>:</p>
-    <pre><code>{
+    <pre><code class="language-json">{
   "mcpServers": {
     "dprr": {
       "type": "http",
@@ -128,7 +128,7 @@ docker run -p 8000:8000 ghcr.io/gillisandrew/dprr-mcp:latest</code></pre>
 
     <h3>Claude Desktop configuration</h3>
     <p>Start the server, then add to <code>claude_desktop_config.json</code>:</p>
-    <pre><code>{
+    <pre><code class="language-json">{
   "mcpServers": {
     "dprr": {
       "type": "http",
@@ -192,7 +192,7 @@ docker run -p 8000:8000 ghcr.io/gillisandrew/dprr-mcp:latest</code></pre>
 
   <section>
     <h2>Development</h2>
-    <pre><code>uv run pytest
+    <pre><code class="language-bash">uv run pytest
 uv run ruff check .</code></pre>
   </section>
 </div>
