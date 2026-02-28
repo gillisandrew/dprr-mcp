@@ -26,7 +26,22 @@ build-backend = "hatchling.build"
 dev = [
     "pytest",
     "pytest-asyncio",
+    "ruff",
 ]
 analysis = [
     "pandas",
 ]
+
+[tool.ruff]
+target-version = "py313"
+line-length = 120
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["E501"]
+"dprr_tool/mcp_server.py" = ["E501"]  # MCP tool docstrings must be single-line
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
