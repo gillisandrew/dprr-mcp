@@ -12,6 +12,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
       - uses: astral-sh/setup-uv@v7
 
       - name: Run tests
@@ -24,7 +26,21 @@ jobs:
         run: uv build
 
       - name: Create data tarball
-        run: tar -czf dprr-data.tar.gz -C data dprr.ttl DATA-LICENSE
+        run: tar -czf dprr-data.tar.gz -C data dprr.ttl
+
+      - name: Build release notes
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api repos/${{ github.repository }}/releases/generate-notes \
+            -f tag_name="${{ github.ref_name }}" \
+            --jq '.body' > /tmp/release-notes.md
+          cat >> /tmp/release-notes.md <<'EOF'
+
+          ---
+
+          **Data License:** The included DPRR dataset (`dprr-data.tar.gz`) is © John Bradley, King's College London, licensed under [CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/). See the [DPRR project](https://romanrepublic.ac.uk/) for details.
+          EOF
 
       - name: Create GitHub release
         env:
@@ -34,4 +50,4 @@ jobs:
             dist/*.tar.gz \
             dist/*.whl \
             dprr-data.tar.gz \
-            --generate-notes
+            --notes-file /tmp/release-notes.md
