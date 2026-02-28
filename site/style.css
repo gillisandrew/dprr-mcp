@@ -124,6 +124,13 @@ pre.architecture {
   font-size: 0.75rem;
   line-height: 1.4;
 }
+pre.mermaid {
+  background: transparent;
+  color: inherit;
+  padding: 0;
+  margin: 1rem 0;
+  text-align: center;
+}
 
 /* Tables */
 table {

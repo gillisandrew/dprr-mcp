@@ -18,6 +18,7 @@
     </p>
     <nav class="nav-links">
       <a href="https://github.com/gillisandrew/dprr-mcp">GitHub</a>
+      <a href="architecture.html">Architecture</a>
       <a href="caveat-utilitor.html">Caveat Utilitor</a>
       <a href="examples/">Examples</a>
     </nav>
@@ -144,20 +145,10 @@ docker run -p 8000:8000 ghcr.io/gillisandrew/dprr-mcp:latest</code></pre>
 
   <section>
     <h2>Architecture</h2>
-    <pre class="architecture"><code>┌─────────────────────────────────────┐
-│  Claude Code Skill (/dprr)          │  System prompt with DPRR domain knowledge
-│  Orchestrates: analyze → generate   │
-│  → validate → execute → synthesize  │
-└──────────────┬──────────────────────┘
-               │ MCP protocol (streamable-http)
-┌──────────────▼──────────────────────┐
-│  MCP Server (dprr-server)           │  3 tools: get_schema, validate_sparql,
-│  Python, streamable-http            │  execute_sparql
-└──────────────┬──────────────────────┘
-               │
-┌──────────────▼──────────────────────┐
-│  Local Oxigraph Store               │  RDF triples from DPRR dataset
-└─────────────────────────────────────┘</code></pre>
+    <p>
+      See the <a href="architecture.html">architecture page</a> for detailed diagrams
+      of server startup, data initialisation, and tool execution flows.
+    </p>
   </section>
 
   <section>
