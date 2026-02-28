@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-import json
 import logging
 import os
 from contextlib import asynccontextmanager
@@ -30,7 +29,7 @@ from dprr_tool.validate import (
 
 logger = logging.getLogger(__name__)
 
-QUERY_TIMEOUT = int(os.environ.get("DPRR_QUERY_TIMEOUT", "60"))
+QUERY_TIMEOUT = int(os.environ.get("DPRR_QUERY_TIMEOUT", "120"))
 
 DEFAULT_STORE_PATH = Path.home() / ".dprr-tool" / "store"
 
@@ -72,14 +71,13 @@ def get_schema(ctx: Context) -> str:
     examples = load_examples()
     tips = load_tips()
 
-    return json.dumps(
-        {
-            "prefixes": prefix_map,
-            "schema_shex": render_schemas_as_shex(schemas),
-            "examples": render_examples(examples),
-            "query_tips": render_tips(tips),
-        },
-        indent=2,
+    prefix_lines = "\n".join(f"PREFIX {k}: <{v}>" for k, v in prefix_map.items())
+
+    return (
+        f"## Prefixes\n\n{prefix_lines}\n\n"
+        f"## Schema (ShEx)\n\n{render_schemas_as_shex(schemas)}\n\n"
+        f"## Examples\n\n{render_examples(examples)}\n\n"
+        f"## Query Tips\n\n{render_tips(tips)}"
     )
 
 
@@ -90,25 +88,40 @@ def validate_sparql(ctx: Context, sparql: str) -> str:
 
     fixed_sparql, parse_errors = parse_and_fix_prefixes(sparql, app.prefix_map)
     if parse_errors:
-        return json.dumps(
-            {"valid": False, "fixed_sparql": fixed_sparql, "errors": parse_errors}
-        )
+        error_list = "\n".join(f"- {e}" for e in parse_errors)
+        return f"INVALID\n\nErrors:\n{error_list}"
 
     from dprr_tool.validate import validate_semantics
 
     semantic_errors = validate_semantics(fixed_sparql, app.schema_dict)
-    return json.dumps(
-        {
-            "valid": len(semantic_errors) == 0,
-            "fixed_sparql": fixed_sparql,
-            "errors": semantic_errors,
-        }
-    )
+    if semantic_errors:
+        error_list = "\n".join(f"- {e}" for e in semantic_errors)
+        return f"INVALID\n\nErrors:\n{error_list}"
+
+    if fixed_sparql != sparql:
+        return f"VALID (prefixes auto-repaired)\n\n```sparql\n{fixed_sparql}\n```"
+    return "VALID"
+
+
+def _format_table(rows: list[dict[str, str]]) -> str:
+    """Format result rows as a markdown table."""
+    if not rows:
+        return "(no results)"
+    columns = list(rows[0].keys())
+    # Build header
+    header = "| " + " | ".join(columns) + " |"
+    separator = "| " + " | ".join("---" for _ in columns) + " |"
+    # Build rows
+    lines = [header, separator]
+    for row in rows:
+        line = "| " + " | ".join(str(row.get(c, "")) for c in columns) + " |"
+        lines.append(line)
+    return "\n".join(lines)
 
 
 @mcp.tool()
 async def execute_sparql(ctx: Context, sparql: str, timeout: int | None = None) -> str:
-    """Validate and execute a SPARQL query against the local DPRR RDF store. Returns results as rows of column/value pairs. Automatically repairs missing PREFIX declarations before execution."""
+    """Validate and execute a SPARQL query against the local DPRR RDF store. Returns results as a markdown table. Automatically repairs missing PREFIX declarations before execution."""
     app: AppContext = ctx.request_context.lifespan_context
     effective_timeout = timeout if timeout is not None else QUERY_TIMEOUT
 
@@ -121,47 +134,21 @@ async def execute_sparql(ctx: Context, sparql: str, timeout: int | None = None) 
         )
     except asyncio.TimeoutError:
         logger.warning("Query timed out after %ds: %s", effective_timeout, sparql[:200])
-        return json.dumps(
-            {
-                "success": False,
-                "sparql": sparql,
-                "rows": [],
-                "row_count": 0,
-                "errors": [f"Query timed out after {effective_timeout}s. Simplify the query or increase the timeout."],
-            }
-        )
+        return f"ERROR: Query timed out after {effective_timeout}s. Simplify the query or increase the timeout."
     except OSError as e:
         logger.error("Store error: %s", e)
-        return json.dumps(
-            {
-                "success": False,
-                "sparql": sparql,
-                "rows": [],
-                "row_count": 0,
-                "errors": [f"Store access error: {e}"],
-            }
-        )
+        return f"ERROR: Store access error: {e}"
     except Exception as e:
         logger.error("Unexpected error executing query: %s", e)
-        return json.dumps(
-            {
-                "success": False,
-                "sparql": sparql,
-                "rows": [],
-                "row_count": 0,
-                "errors": [f"Unexpected error: {e}"],
-            }
-        )
+        return f"ERROR: Unexpected error: {e}"
 
-    return json.dumps(
-        {
-            "success": result.success,
-            "sparql": result.sparql,
-            "rows": result.rows,
-            "row_count": len(result.rows),
-            "errors": result.errors,
-        }
-    )
+    if not result.success:
+        error_list = "\n".join(f"- {e}" for e in result.errors)
+        return f"ERROR:\n{error_list}"
+
+    row_count = len(result.rows)
+    table = _format_table(result.rows)
+    return f"{row_count} result(s)\n\n{table}"
 
 
 def main():

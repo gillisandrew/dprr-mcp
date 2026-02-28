@@ -1,11 +1,10 @@
 import asyncio
-import json
 import sys
 from unittest.mock import patch, MagicMock
 
 import pytest
 
-from dprr_tool.mcp_server import main, execute_sparql, QUERY_TIMEOUT
+from dprr_tool.mcp_server import main, execute_sparql, _format_table, QUERY_TIMEOUT
 
 
 # --- argparse tests ---
@@ -46,6 +45,27 @@ def test_main_invalid_transport():
             main()
 
 
+# --- _format_table tests ---
+
+
+def test_format_table_empty():
+    assert _format_table([]) == "(no results)"
+
+
+def test_format_table_single_row():
+    rows = [{"name": "Alice", "age": "30"}]
+    result = _format_table(rows)
+    assert "| name | age |" in result
+    assert "| Alice | 30 |" in result
+
+
+def test_format_table_multiple_rows():
+    rows = [{"x": "a"}, {"x": "b"}]
+    result = _format_table(rows)
+    lines = result.strip().split("\n")
+    assert len(lines) == 4  # header + separator + 2 rows
+
+
 # --- execute_sparql timeout and error handling tests ---
 
 
@@ -65,7 +85,7 @@ def _make_mock_ctx(store=None, prefix_map=None, schema_dict=None):
 
 @pytest.mark.asyncio
 async def test_execute_sparql_timeout():
-    """execute_sparql returns structured error on timeout."""
+    """execute_sparql returns error text on timeout."""
     ctx = _make_mock_ctx()
 
     async def slow_thread(*args, **kwargs):
@@ -75,14 +95,13 @@ async def test_execute_sparql_timeout():
          patch("dprr_tool.mcp_server.asyncio.to_thread", side_effect=slow_thread):
         result_str = await execute_sparql(ctx, "SELECT ?x WHERE { ?x ?y ?z }")
 
-    result = json.loads(result_str)
-    assert result["success"] is False
-    assert "timed out" in result["errors"][0]
+    assert result_str.startswith("ERROR:")
+    assert "timed out" in result_str
 
 
 @pytest.mark.asyncio
 async def test_execute_sparql_os_error():
-    """execute_sparql returns structured error on OSError."""
+    """execute_sparql returns error text on OSError."""
     ctx = _make_mock_ctx()
 
     async def raise_os_error(*args, **kwargs):
@@ -91,14 +110,13 @@ async def test_execute_sparql_os_error():
     with patch("dprr_tool.mcp_server.asyncio.to_thread", side_effect=raise_os_error):
         result_str = await execute_sparql(ctx, "SELECT ?x WHERE { ?x ?y ?z }")
 
-    result = json.loads(result_str)
-    assert result["success"] is False
-    assert "Store access error" in result["errors"][0]
+    assert result_str.startswith("ERROR:")
+    assert "Store access error" in result_str
 
 
 @pytest.mark.asyncio
 async def test_execute_sparql_unexpected_error():
-    """execute_sparql returns structured error on unexpected exceptions."""
+    """execute_sparql returns error text on unexpected exceptions."""
     ctx = _make_mock_ctx()
 
     async def raise_unexpected(*args, **kwargs):
@@ -107,14 +125,13 @@ async def test_execute_sparql_unexpected_error():
     with patch("dprr_tool.mcp_server.asyncio.to_thread", side_effect=raise_unexpected):
         result_str = await execute_sparql(ctx, "SELECT ?x WHERE { ?x ?y ?z }")
 
-    result = json.loads(result_str)
-    assert result["success"] is False
-    assert "Unexpected error" in result["errors"][0]
+    assert result_str.startswith("ERROR:")
+    assert "Unexpected error" in result_str
 
 
 @pytest.mark.asyncio
 async def test_execute_sparql_success():
-    """execute_sparql returns results on success."""
+    """execute_sparql returns a markdown table on success."""
     from dprr_tool.validate import ValidationResult
 
     ctx = _make_mock_ctx()
@@ -125,15 +142,9 @@ async def test_execute_sparql_success():
         errors=[],
     )
 
-    async def mock_thread(fn, *args, **kwargs):
-        return fn(*args, **kwargs)
+    with patch("dprr_tool.mcp_server.asyncio.wait_for", return_value=mock_result):
+        result_str = await execute_sparql(ctx, "SELECT ?x WHERE { ?x ?y ?z }")
 
-    with patch("dprr_tool.mcp_server.asyncio.to_thread", return_value=mock_result) as mock_to_thread:
-        # Bypass the actual to_thread by making wait_for resolve our mock
-        with patch("dprr_tool.mcp_server.asyncio.wait_for", return_value=mock_result):
-            result_str = await execute_sparql(ctx, "SELECT ?x WHERE { ?x ?y ?z }")
-
-    result = json.loads(result_str)
-    assert result["success"] is True
-    assert result["row_count"] == 1
-    assert result["errors"] == []
+    assert result_str.startswith("1 result(s)")
+    assert "| x |" in result_str
+    assert "http://example.com/1" in result_str
