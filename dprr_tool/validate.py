@@ -13,6 +13,14 @@ from dprr_tool.store import execute_query
 RDF_TYPE = URIRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type")
 
 
+def _suggest(name: str, valid_names: list[str]) -> str:
+    """Return a 'Did you mean' suffix if close matches exist, else empty string."""
+    from difflib import get_close_matches
+
+    matches = get_close_matches(name, valid_names, n=3, cutoff=0.6)
+    return f" Did you mean: {', '.join(matches)}?" if matches else ""
+
+
 def _local_name(uri: str) -> str:
     """Extract the local name from a URI, handling both # and / separators."""
     if "#" in uri:
@@ -199,6 +207,7 @@ def validate_semantics(sparql: str, schema_dict: dict) -> list[str]:
                 )
                 errors.append(
                     f"Unknown class '{local_name}'. Valid classes: {', '.join(valid_classes)}"
+                    + _suggest(local_name, valid_classes)
                 )
             if isinstance(s, Variable):
                 var_name = str(s)
@@ -233,6 +242,7 @@ def validate_semantics(sparql: str, schema_dict: dict) -> list[str]:
                     f"Unknown predicate '{pred_local}' for class "
                     f"'{_local_name(class_uri)}'. "
                     f"Valid predicates: {', '.join(valid_local)}"
+                    + _suggest(pred_local, valid_local)
                 )
 
     return errors

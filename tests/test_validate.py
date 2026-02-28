@@ -5,6 +5,7 @@ from dprr_tool.store import get_or_create_store, load_rdf
 from dprr_tool.validate import (
     ValidationResult,
     _local_name,
+    _suggest,
     build_schema_dict,
     parse_and_fix_prefixes,
     validate_and_execute,
@@ -136,3 +137,47 @@ def test_validation_result_fields():
     assert result.success
     assert result.sparql == "SELECT ..."
     assert result.rows == [{"a": "1"}]
+
+
+# --- Fuzzy-match suggestions ---
+
+def test_suggest_close_typo():
+    """A close typo produces 'Did you mean' suggestions."""
+    result = _suggest("Persn", ["Person", "PostAssertion", "StatusAssertion"])
+    assert "Did you mean" in result
+    assert "Person" in result
+
+
+def test_suggest_no_match():
+    """A completely wrong name produces no suggestion."""
+    result = _suggest("Xyzzy", ["Person", "PostAssertion", "StatusAssertion"])
+    assert result == ""
+
+
+def test_validate_semantics_unknown_class_suggests():
+    """Unknown class error includes fuzzy-match suggestion for close typos."""
+    sd = _make_schema_dict()
+    sparql = "PREFIX vocab: <http://romanrepublic.ac.uk/rdf/entity/vocab/>\nSELECT ?x WHERE {\n    ?x a vocab:Persn .\n}"
+    errors = validate_semantics(sparql, sd)
+    assert len(errors) > 0
+    assert "Did you mean" in errors[0]
+    assert "Person" in errors[0]
+
+
+def test_validate_semantics_unknown_class_no_suggestion():
+    """Unknown class error omits suggestion when no close match exists."""
+    sd = _make_schema_dict()
+    sparql = "PREFIX vocab: <http://romanrepublic.ac.uk/rdf/entity/vocab/>\nSELECT ?x WHERE {\n    ?x a vocab:Xyzzy .\n}"
+    errors = validate_semantics(sparql, sd)
+    assert len(errors) > 0
+    assert "Did you mean" not in errors[0]
+
+
+def test_validate_semantics_unknown_predicate_suggests():
+    """Unknown predicate error includes fuzzy-match suggestion for close typos."""
+    sd = _make_schema_dict()
+    sparql = "PREFIX vocab: <http://romanrepublic.ac.uk/rdf/entity/vocab/>\nSELECT ?x ?name WHERE {\n    ?x a vocab:Person ;\n        vocab:hasPersonNam ?name .\n}"
+    errors = validate_semantics(sparql, sd)
+    assert len(errors) > 0
+    assert "Did you mean" in errors[0]
+    assert "hasPersonName" in errors[0]
