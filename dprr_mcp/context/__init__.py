@@ -62,3 +62,45 @@ def render_tips(tips: list[dict]) -> str:
     for tip in tips:
         sections.append(f"- **{tip['title']}**: {tip['body'].strip()}")
     return "\n\n".join(sections)
+
+
+def render_class_summary(schemas: dict) -> str:
+    """Render a one-line-per-class summary: name + URI + comment. No properties."""
+    lines = []
+    for cls_name, cls_data in schemas.items():
+        comment = cls_data.get("comment", "")
+        lines.append(f"- **{cls_name}** (`{cls_data['uri']}`) — {comment}")
+    return "\n".join(lines)
+
+
+def get_cross_cutting_tips(tips: list[dict]) -> list[dict]:
+    """Return tips where ``classes`` is empty (cross-cutting)."""
+    return [t for t in tips if not t.get("classes")]
+
+
+def get_relevant_tips(tips: list[dict], class_names: set[str], limit: int = 5) -> list[dict]:
+    """Return tips whose ``classes`` overlap with *class_names*, sorted by overlap size."""
+    scored = []
+    for tip in tips:
+        tip_classes = set(tip.get("classes", []))
+        if not tip_classes:
+            continue
+        overlap = len(tip_classes & class_names)
+        if overlap > 0:
+            scored.append((overlap, tip))
+    scored.sort(key=lambda x: x[0], reverse=True)
+    return [tip for _, tip in scored[:limit]]
+
+
+def get_relevant_examples(examples: list[dict], class_names: set[str], limit: int = 3) -> list[dict]:
+    """Return examples whose ``classes`` overlap with *class_names*, sorted by overlap size."""
+    scored = []
+    for ex in examples:
+        ex_classes = set(ex.get("classes", []))
+        if not ex_classes:
+            continue
+        overlap = len(ex_classes & class_names)
+        if overlap > 0:
+            scored.append((overlap, ex))
+    scored.sort(key=lambda x: x[0], reverse=True)
+    return [ex for _, ex in scored[:limit]]
