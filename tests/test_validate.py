@@ -7,6 +7,7 @@ from dprr_mcp.validate import (
     _local_name,
     _suggest,
     build_schema_dict,
+    extract_query_classes,
     parse_and_fix_prefixes,
     validate_and_execute,
     validate_semantics,
@@ -181,3 +182,48 @@ def test_validate_semantics_unknown_predicate_suggests():
     assert len(errors) > 0
     assert "Did you mean" in errors[0]
     assert "hasPersonName" in errors[0]
+
+
+# --- extract_query_classes ---
+
+
+def test_extract_query_classes_from_type_pattern():
+    """Explicit ?x a vocab:Person produces {'Person'}."""
+    sd = _make_schema_dict()
+    sparql = (
+        "PREFIX vocab: <http://romanrepublic.ac.uk/rdf/ontology#>\n"
+        "SELECT ?p WHERE { ?p a vocab:Person }"
+    )
+    assert extract_query_classes(sparql, sd) == {"Person"}
+
+
+def test_extract_query_classes_from_predicate():
+    """Using vocab:hasPersonName (Person-only predicate) infers {'Person'}."""
+    sd = _make_schema_dict()
+    sparql = (
+        "PREFIX vocab: <http://romanrepublic.ac.uk/rdf/ontology#>\n"
+        "SELECT ?p ?n WHERE { ?p vocab:hasPersonName ?n }"
+    )
+    assert "Person" in extract_query_classes(sparql, sd)
+
+
+def test_extract_query_classes_multiple():
+    """Multi-class query extracts all referenced classes."""
+    sd = _make_schema_dict()
+    sparql = (
+        "PREFIX vocab: <http://romanrepublic.ac.uk/rdf/ontology#>\n"
+        "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\n"
+        "SELECT ?name WHERE {\n"
+        "  ?a a vocab:PostAssertion ; vocab:isAboutPerson ?p ; vocab:hasOffice ?o .\n"
+        "  ?p a vocab:Person ; vocab:hasPersonName ?name .\n"
+        "}"
+    )
+    classes = extract_query_classes(sparql, sd)
+    assert "PostAssertion" in classes
+    assert "Person" in classes
+
+
+def test_extract_query_classes_unparseable():
+    """Unparseable SPARQL returns empty set."""
+    sd = _make_schema_dict()
+    assert extract_query_classes("SELCT ?x WHERE { broken }", sd) == set()

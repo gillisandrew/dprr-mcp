@@ -175,6 +175,37 @@ def _collect_triples(sparql: str) -> list[tuple]:
     return triples
 
 
+_UNIVERSAL_PREDS = {
+    "http://www.w3.org/2000/01/rdf-schema#label",
+    "http://www.w3.org/1999/02/22-rdf-syntax-ns#type",
+}
+
+
+def extract_query_classes(sparql: str, schema_dict: dict) -> set[str]:
+    """Extract class local names referenced in a SPARQL query.
+
+    Detects classes from:
+    1. Explicit ``?x a vocab:ClassName`` type triples
+    2. Predicate reverse-lookup: if a predicate belongs to a specific class
+       in *schema_dict*, infer that class
+    """
+    try:
+        triples = _collect_triples(sparql)
+    except Exception:
+        return set()
+
+    classes: set[str] = set()
+    for s, p, o in triples:
+        if p == RDF_TYPE and isinstance(o, URIRef):
+            classes.add(_local_name(str(o)))
+        elif isinstance(p, URIRef) and str(p) not in _UNIVERSAL_PREDS:
+            pred_str = str(p)
+            for class_uri, preds in schema_dict.items():
+                if pred_str in preds:
+                    classes.add(_local_name(class_uri))
+    return classes
+
+
 def validate_semantics(sparql: str, schema_dict: dict) -> list[str]:
     """Validate a SPARQL query against the schema dictionary.
 
