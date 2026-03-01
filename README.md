@@ -35,7 +35,7 @@ docker run -p 8000:8000 dprr-mcp
 To persist the auto-downloaded data across container restarts, mount a volume:
 
 ```bash
-docker run -p 8000:8000 -v dprr-data:/root/.local/share/dprr-mcp ghcr.io/gillisandrew/dprr-mcp:latest
+docker run -p 8000:8000 -v dprr-data:/app/data ghcr.io/gillisandrew/dprr-mcp:latest
 ```
 
 ### Data
